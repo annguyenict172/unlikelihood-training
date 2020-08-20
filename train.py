@@ -146,6 +146,7 @@ def train(epochs, train_data, optimizer, lr, batch_size, save_path, training_typ
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("-pre", "--pretrained_path", help="Path to pretrained model", type=str)
     parser.add_argument("-f", "--file", help="Path to training data file", type=str)
     parser.add_argument("-s", "--seq_len", help="The length of each sequence", type=int)
     parser.add_argument("-e", "--epochs", help="Number of epochs", type=int)
@@ -158,8 +159,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Get tokenizer and model
-    tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-    model = GPT2LMHeadModel.from_pretrained("gpt2", pad_token_id=tokenizer.eos_token_id)
+    tokenizer = GPT2Tokenizer.from_pretrained(args.pretrained_path)
+    model = GPT2LMHeadModel.from_pretrained(args.pretrained_path, pad_token_id=tokenizer.eos_token_id)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
