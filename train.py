@@ -90,7 +90,6 @@ def prepare_training_data(file_path, tokenizer, seq_len):
 
 def train(epochs, train_data, optimizer, lr, batch_size, save_path, training_type='mle', prefix_length=20, completion_length=100):
     model.train()  # Turn on the train mode
-    best_mean_loss = float('inf')
 
     for epoch in range(1, epochs+1):
         total_loss = 0.
@@ -139,9 +138,9 @@ def train(epochs, train_data, optimizer, lr, batch_size, save_path, training_typ
                 total_loss = 0
                 start_time = time.time()
 
-                if cur_loss < best_mean_loss:
-                    best_mean_loss = cur_loss
-                    torch.save(model, save_path)
+        # Save the model
+        # TODO: Only save the model if the validation loss is getting better
+        torch.save(model, save_path)
 
 
 if __name__ == "__main__":
