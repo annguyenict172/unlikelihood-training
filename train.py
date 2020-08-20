@@ -88,8 +88,10 @@ def prepare_training_data(file_path, tokenizer, seq_len):
     return train_data
 
 
-def train(epochs, train_data, optimizer, lr, batch_size, training_type='mle', prefix_length=20, completion_length=100):
+def train(epochs, train_data, optimizer, lr, batch_size, save_path, training_type='mle', prefix_length=20, completion_length=100):
     model.train()  # Turn on the train mode
+    best_mean_loss = float('inf')
+
     for epoch in range(1, epochs+1):
         total_loss = 0.
         start_time = time.time()
@@ -124,7 +126,7 @@ def train(epochs, train_data, optimizer, lr, batch_size, training_type='mle', pr
                 raise Exception('{} training type is not supported'.format(training_type))
 
             total_loss += loss.item()
-            log_interval = train_data.size(0) // 10
+            log_interval = (train_data.size(0) // batch_size) // 10
             if batch % log_interval == 0 and batch > 0:
                 cur_loss = total_loss / log_interval
                 elapsed = time.time() - start_time
@@ -137,6 +139,10 @@ def train(epochs, train_data, optimizer, lr, batch_size, training_type='mle', pr
                 total_loss = 0
                 start_time = time.time()
 
+                if cur_loss < best_mean_loss:
+                    best_mean_loss = cur_loss
+                    torch.save(model, save_path)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -148,6 +154,7 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--completion_length", help="Completion length", type=int)
     parser.add_argument("-p", "--prefix_length", help="Prefix length", type=int)
     parser.add_argument("-t", "--training_type", help="Training type", type=str)
+    parser.add_argument("-sa", "--save_path", help="Model save path", type=str)
     args = parser.parse_args()
 
     # Get tokenizer and model
@@ -158,7 +165,7 @@ if __name__ == "__main__":
     model = model.to(device)
 
     seq_len = args.seq_len
-    train_data = prepare_training_data(args.file_path, tokenizer, seq_len)
+    train_data = prepare_training_data(args.file, tokenizer, seq_len)
 
     epochs = args.epochs
     batch_size = args.batch_size
@@ -168,4 +175,5 @@ if __name__ == "__main__":
     prefix_length = args.prefix_length
 
     train(epochs=epochs, train_data=train_data, optimizer=optimizer, lr=lr, batch_size=batch_size,
-          training_type=args.training_type, prefix_length=prefix_length, completion_length=completion_length)
+          training_type=args.training_type, prefix_length=prefix_length, completion_length=completion_length,
+          save_path=args.save_path)
